@@ -118,13 +118,13 @@ const MandalaCanvas = ({ isHovered, size }: { isHovered: boolean; size: number }
     const animate = () => {
       time.current += 0.016;
       const t = time.current;
-      const target = isHovered ? 1 : 0;
+      const target = isHovered ? 1 : 0.6;
       hoverProgress.current += (target - hoverProgress.current) * 0.06;
       const hp = hoverProgress.current;
 
       ctx.clearRect(0, 0, size, size);
 
-      if (hp > 0.005) {
+      {
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
 
