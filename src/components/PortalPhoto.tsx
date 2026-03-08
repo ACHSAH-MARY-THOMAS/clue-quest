@@ -13,18 +13,16 @@ const techIcons = [
 ];
 
 interface Spark {
-  angle: number;
-  radius: number;
-  speed: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   life: number;
   maxLife: number;
   size: number;
   hue: number;
-  sat: number;
   light: number;
-  drift: number;
-  curl: number;
-  type: "spark" | "ember" | "streamer";
+  type: "streak" | "dot" | "glow";
 }
 
 const FirePortalCanvas = ({ isHovered, size }: { isHovered: boolean; size: number }) => {
@@ -40,31 +38,27 @@ const FirePortalCanvas = ({ isHovered, size }: { isHovered: boolean; size: numbe
 
   const spawnSpark = useCallback((): Spark => {
     const angle = Math.random() * Math.PI * 2;
-    const type: Spark["type"] = Math.random() < 0.15 ? "streamer" : Math.random() < 0.4 ? "ember" : "spark";
-    
+    const r = ringRadius + (Math.random() - 0.5) * size * 0.03;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+
+    // Purely radial outward direction with slight random spread
+    const spreadAngle = angle + (Math.random() - 0.5) * 0.6;
+    const speed = 1.5 + Math.random() * 4;
+    const type: Spark["type"] = Math.random() < 0.2 ? "glow" : Math.random() < 0.5 ? "streak" : "dot";
+
     return {
-      angle,
-      radius: ringRadius + (Math.random() - 0.5) * size * 0.04,
-      speed: type === "streamer" 
-        ? 1.5 + Math.random() * 3.5 
-        : type === "spark" 
-          ? 0.8 + Math.random() * 2.5 
-          : 0.3 + Math.random() * 1.2,
+      x, y,
+      vx: Math.cos(spreadAngle) * speed,
+      vy: Math.sin(spreadAngle) * speed,
       life: 0,
-      maxLife: type === "streamer" 
-        ? 30 + Math.random() * 40 
-        : type === "spark" 
-          ? 15 + Math.random() * 25 
-          : 40 + Math.random() * 30,
-      size: type === "streamer" ? 1 + Math.random() * 1.5 : type === "spark" ? 0.5 + Math.random() * 1.5 : 1.5 + Math.random() * 2.5,
+      maxLife: type === "streak" ? 20 + Math.random() * 30 : type === "glow" ? 30 + Math.random() * 20 : 10 + Math.random() * 20,
+      size: type === "streak" ? 1 + Math.random() * 1.5 : type === "glow" ? 3 + Math.random() * 4 : 0.5 + Math.random() * 1.5,
       hue: 15 + Math.random() * 30,
-      sat: 90 + Math.random() * 10,
-      light: type === "streamer" ? 70 + Math.random() * 25 : 50 + Math.random() * 40,
-      drift: (Math.random() - 0.5) * 0.04,
-      curl: (Math.random() - 0.5) * 0.02,
+      light: type === "streak" ? 75 + Math.random() * 20 : 50 + Math.random() * 35,
       type,
     };
-  }, [ringRadius, size]);
+  }, [cx, cy, ringRadius, size]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,8 +74,8 @@ const FirePortalCanvas = ({ isHovered, size }: { isHovered: boolean; size: numbe
       ctx.clearRect(0, 0, size, size);
 
       if (hp > 0.005) {
-        // Spawn sparks - lots of them for density
-        const spawnCount = Math.floor(hp * 35);
+        // Spawn lots of sparks
+        const spawnCount = Math.floor(hp * 40);
         for (let i = 0; i < spawnCount; i++) {
           sparks.current.push(spawnSpark());
         }
@@ -89,120 +83,106 @@ const FirePortalCanvas = ({ isHovered, size }: { isHovered: boolean; size: numbe
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
 
-        // === CORE RING GLOW (multiple soft layers) ===
-        for (let layer = 0; layer < 5; layer++) {
-          const blur = 8 + layer * 10;
-          const alpha = (0.15 - layer * 0.025) * hp;
+        // === SOFT AMBIENT GLOW layers ===
+        for (let layer = 0; layer < 4; layer++) {
+          const blur = 12 + layer * 14;
+          const alpha = (0.12 - layer * 0.02) * hp;
           ctx.beginPath();
           ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
-          ctx.strokeStyle = `hsla(30, 100%, 55%, ${alpha})`;
-          ctx.lineWidth = size * 0.05 + blur;
+          ctx.strokeStyle = `hsla(28, 100%, 50%, ${alpha})`;
+          ctx.lineWidth = size * 0.06 + blur;
           ctx.filter = `blur(${blur}px)`;
           ctx.stroke();
         }
 
-        // === BRIGHT CORE RING with animated variation ===
-        ctx.filter = "blur(3px)";
-        const segments = 180;
+        // === BRIGHT CORE RING ===
+        ctx.filter = "blur(2px)";
+        const segments = 200;
         for (let s = 0; s < segments; s++) {
           const a1 = (s / segments) * Math.PI * 2;
           const a2 = ((s + 1.5) / segments) * Math.PI * 2;
-          const noise = 
-            Math.sin(a1 * 4 + time.current * 3) * 0.25 + 
-            Math.sin(a1 * 9 + time.current * 5) * 0.15 +
-            Math.sin(a1 * 15 + time.current * 7) * 0.1;
-          const bright = 0.5 + noise;
-          const hue = 25 + Math.sin(a1 * 3 + time.current * 2) * 12;
-          const width = size * 0.035 * (0.5 + bright * 0.6);
+          const noise =
+            Math.sin(a1 * 5 + time.current * 3) * 0.2 +
+            Math.sin(a1 * 11 + time.current * 6) * 0.15 +
+            Math.sin(a1 * 19 + time.current * 9) * 0.08;
+          const bright = 0.55 + noise;
+          const hue = 25 + Math.sin(a1 * 3 + time.current * 1.5) * 10;
           ctx.beginPath();
           ctx.arc(cx, cy, ringRadius, a1, a2);
-          ctx.strokeStyle = `hsla(${hue}, 100%, ${50 + bright * 40}%, ${(0.7 + bright * 0.3) * hp})`;
-          ctx.lineWidth = width;
+          ctx.strokeStyle = `hsla(${hue}, 100%, ${50 + bright * 40}%, ${(0.6 + bright * 0.4) * hp})`;
+          ctx.lineWidth = size * 0.03 * (0.5 + bright * 0.6);
           ctx.stroke();
         }
 
         // === WHITE-HOT inner edge ===
-        ctx.filter = "blur(1.5px)";
+        ctx.filter = "blur(1px)";
         ctx.beginPath();
         ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsla(45, 100%, 92%, ${0.4 * hp})`;
-        ctx.lineWidth = size * 0.012;
+        ctx.strokeStyle = `hsla(45, 100%, 92%, ${0.35 * hp})`;
+        ctx.lineWidth = size * 0.008;
         ctx.stroke();
 
         ctx.filter = "none";
 
-        // === SPARKS & EMBERS ===
+        // === SPARKS shooting outward radially ===
         sparks.current = sparks.current.filter(s => {
           s.life++;
           if (s.life > s.maxLife) return false;
 
+          // Move outward — NO rotation, pure radial spread
+          s.x += s.vx;
+          s.y += s.vy;
+          // Slight deceleration
+          s.vx *= 0.985;
+          s.vy *= 0.985;
+
+          if (s.x < -20 || s.x > size + 20 || s.y < -20 || s.y > size + 20) return false;
+
           const progress = s.life / s.maxLife;
-          s.angle += s.drift + s.curl * Math.sin(s.life * 0.1);
-          s.radius += s.speed;
-
-          const x = cx + Math.cos(s.angle) * s.radius;
-          const y = cy + Math.sin(s.angle) * s.radius;
-
-          // Out of bounds check
-          if (x < -10 || x > size + 10 || y < -10 || y > size + 10) return false;
-
-          const fadeIn = Math.min(progress * 6, 1);
-          const fadeOut = Math.pow(1 - progress, 1.8);
+          const fadeIn = Math.min(progress * 8, 1);
+          const fadeOut = Math.pow(1 - progress, 2);
           const alpha = fadeIn * fadeOut * hp;
 
-          if (s.type === "streamer") {
-            // Long bright streaks shooting outward
-            const tailLen = s.speed * 4;
-            const tx = cx + Math.cos(s.angle) * (s.radius - tailLen);
-            const ty = cy + Math.sin(s.angle) * (s.radius - tailLen);
-            
-            const grad = ctx.createLinearGradient(tx, ty, x, y);
-            grad.addColorStop(0, `hsla(${s.hue}, ${s.sat}%, ${s.light}%, 0)`);
-            grad.addColorStop(0.3, `hsla(${s.hue}, ${s.sat}%, ${s.light}%, ${alpha * 0.5})`);
-            grad.addColorStop(1, `hsla(${s.hue + 10}, 100%, ${Math.min(s.light + 20, 95)}%, ${alpha})`);
-            
+          if (s.type === "streak") {
+            // Draw a line from previous position to current (streak tail)
+            const tailLen = Math.sqrt(s.vx * s.vx + s.vy * s.vy) * 5;
+            const angle = Math.atan2(s.vy, s.vx);
+            const tx = s.x - Math.cos(angle) * tailLen;
+            const ty = s.y - Math.sin(angle) * tailLen;
+
+            const grad = ctx.createLinearGradient(tx, ty, s.x, s.y);
+            grad.addColorStop(0, `hsla(${s.hue}, 100%, ${s.light}%, 0)`);
+            grad.addColorStop(0.4, `hsla(${s.hue}, 100%, ${s.light}%, ${alpha * 0.4})`);
+            grad.addColorStop(1, `hsla(${s.hue + 10}, 100%, ${Math.min(s.light + 15, 97)}%, ${alpha})`);
+
             ctx.beginPath();
             ctx.moveTo(tx, ty);
-            ctx.lineTo(x, y);
+            ctx.lineTo(s.x, s.y);
             ctx.strokeStyle = grad;
             ctx.lineWidth = s.size * (1 - progress * 0.5);
             ctx.stroke();
 
-            // Bright tip
-            const tipGrad = ctx.createRadialGradient(x, y, 0, x, y, s.size * 3);
-            tipGrad.addColorStop(0, `hsla(${s.hue + 15}, 100%, 95%, ${alpha})`);
-            tipGrad.addColorStop(0.5, `hsla(${s.hue}, 100%, 70%, ${alpha * 0.4})`);
-            tipGrad.addColorStop(1, `hsla(${s.hue - 5}, 100%, 40%, 0)`);
-            ctx.fillStyle = tipGrad;
+            // Bright tip dot
+            ctx.fillStyle = `hsla(${s.hue + 15}, 100%, 95%, ${alpha})`;
             ctx.beginPath();
-            ctx.arc(x, y, s.size * 3, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, s.size * 0.8, 0, Math.PI * 2);
             ctx.fill();
-          } else if (s.type === "spark") {
-            // Small bright dots
-            ctx.fillStyle = `hsla(${s.hue + 15}, 100%, ${s.light + 10}%, ${alpha})`;
+          } else if (s.type === "dot") {
+            // Tiny bright particles
+            ctx.fillStyle = `hsla(${s.hue + 10}, 100%, ${s.light + 15}%, ${alpha})`;
             ctx.beginPath();
-            ctx.arc(x, y, s.size * (1 - progress * 0.4), 0, Math.PI * 2);
-            ctx.fill();
-
-            // Glow around spark
-            const sg = ctx.createRadialGradient(x, y, 0, x, y, s.size * 5);
-            sg.addColorStop(0, `hsla(${s.hue}, 100%, 65%, ${alpha * 0.3})`);
-            sg.addColorStop(1, `hsla(${s.hue}, 100%, 40%, 0)`);
-            ctx.fillStyle = sg;
-            ctx.beginPath();
-            ctx.arc(x, y, s.size * 5, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, s.size * (1 - progress * 0.3), 0, Math.PI * 2);
             ctx.fill();
           } else {
-            // Embers - larger, softer, slower
-            const eSize = s.size * (1 - progress * 0.3);
-            const eg = ctx.createRadialGradient(x, y, 0, x, y, eSize * 4);
-            eg.addColorStop(0, `hsla(${s.hue + 10}, 100%, 85%, ${alpha * 0.8})`);
-            eg.addColorStop(0.3, `hsla(${s.hue}, 100%, 55%, ${alpha * 0.5})`);
-            eg.addColorStop(0.7, `hsla(${s.hue - 10}, 90%, 35%, ${alpha * 0.2})`);
-            eg.addColorStop(1, `hsla(${s.hue - 15}, 80%, 20%, 0)`);
+            // Soft glow embers
+            const eSize = s.size * (1 - progress * 0.4);
+            const eg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, eSize * 4);
+            eg.addColorStop(0, `hsla(${s.hue + 10}, 100%, 85%, ${alpha * 0.7})`);
+            eg.addColorStop(0.3, `hsla(${s.hue}, 100%, 55%, ${alpha * 0.4})`);
+            eg.addColorStop(1, `hsla(${s.hue - 10}, 90%, 30%, 0)`);
             ctx.fillStyle = eg;
             ctx.beginPath();
-            ctx.arc(x, y, eSize * 4, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, eSize * 4, 0, Math.PI * 2);
             ctx.fill();
           }
 
@@ -252,24 +232,15 @@ export const PortalPhoto = () => {
     >
       <FirePortalCanvas isHovered={isHovered} size={size} />
 
-      {/* Dark inner circle */}
-      <div
-        className="absolute rounded-full bg-background z-[5]"
-        style={{ inset: size * 0.15 }}
-      />
+      <div className="absolute rounded-full bg-background z-[5]" style={{ inset: size * 0.15 }} />
 
-      {/* Photo placeholder */}
       <div
         className="absolute rounded-full overflow-hidden bg-muted flex items-center justify-center z-[6]"
-        style={{
-          inset: size * 0.17,
-          border: "2px solid hsl(35, 100%, 55% / 0.25)",
-        }}
+        style={{ inset: size * 0.17, border: "2px solid hsl(35, 100%, 55% / 0.25)" }}
       >
         <span className="text-6xl text-muted-foreground select-none">👤</span>
       </div>
 
-      {/* Ambient glow */}
       <motion.div
         className="absolute rounded-full pointer-events-none"
         style={{ inset: -10 }}
@@ -281,7 +252,6 @@ export const PortalPhoto = () => {
         transition={{ duration: 0.8 }}
       />
 
-      {/* Orbiting tech icons */}
       <AnimatePresence>
         {isHovered && techIcons.map((icon, i) => {
           const angle = (i / techIcons.length) * Math.PI * 2 + rotation * (Math.PI / 180) * 0.25;
@@ -293,8 +263,7 @@ export const PortalPhoto = () => {
               key={icon.label}
               className="absolute w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold backdrop-blur-md z-20"
               style={{
-                left: "50%",
-                top: "50%",
+                left: "50%", top: "50%",
                 background: "hsl(222 47% 9% / 0.9)",
                 color: icon.color,
                 border: `1px solid ${icon.color}40`,

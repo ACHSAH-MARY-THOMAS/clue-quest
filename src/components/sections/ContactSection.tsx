@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Mail, Github, Linkedin, MapPin, Phone } from "lucide-react";
+import { CyberFrame, HudDot } from "../CyberFrame";
 
 const links = [
   { icon: Mail, label: "your.email@example.com", href: "mailto:your.email@example.com" },
@@ -11,34 +12,34 @@ const links = [
 
 export const ContactSection = () => (
   <section id="contact" className="py-24 px-6 relative overflow-hidden">
-    {/* Cinematic gradient background */}
+    {/* Cinematic gradient */}
     <div className="absolute inset-0 bg-gradient-to-b from-background via-card to-background" />
-    
-    {/* Radial glow */}
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-    
+
     {/* Grid overlay */}
-    <div className="absolute inset-0 opacity-[0.02]" style={{
-      backgroundImage: `linear-gradient(hsl(var(--neon-purple)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--neon-purple)) 1px, transparent 1px)`,
-      backgroundSize: "40px 40px",
-    }} />
+    <div
+      className="absolute inset-0 opacity-[0.02]"
+      style={{
+        backgroundImage: `linear-gradient(hsl(var(--neon-purple)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--neon-purple)) 1px, transparent 1px)`,
+        backgroundSize: "40px 40px",
+      }}
+    />
 
     <div className="max-w-4xl mx-auto text-center relative z-10">
       <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-        {/* Movie ending style */}
-        <motion.p
-          className="text-accent text-sm tracking-[0.5em] uppercase mb-6 font-medium"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-        >
-          The End... or Just the Beginning?
-        </motion.p>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="h-[1px] w-12 bg-accent/50" />
+          <span className="text-accent text-sm tracking-[0.5em] uppercase font-mono">
+            The End... or Just the Beginning?
+          </span>
+          <div className="h-[1px] w-12 bg-accent/50" />
+        </div>
+
         <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-wider">
           <span className="text-glow">Get In Touch</span>
         </h2>
         <div className="w-20 h-1 bg-gradient-to-r from-accent via-primary to-accent mb-4 rounded-full mx-auto" />
+
         <motion.p
           className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-lg mx-auto italic"
           initial={{ opacity: 0 }}
@@ -58,21 +59,24 @@ export const ContactSection = () => (
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-4 px-8 py-5 w-full max-w-md rounded-xl border border-border bg-card/80 backdrop-blur-sm card-glow hover:border-primary/50 transition-all duration-300 group"
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
           >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <link.icon className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-foreground group-hover:text-primary transition-colors text-sm">{link.label}</span>
+            <CyberFrame className="flex items-center gap-4 px-8 py-5 w-full max-w-md rounded-xl border border-border bg-card/80 backdrop-blur-sm card-glow hover:border-primary/50 transition-all duration-300 group">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <link.icon className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-foreground group-hover:text-primary transition-colors text-sm">
+                {link.label}
+              </span>
+            </CyberFrame>
           </motion.a>
         ))}
       </div>
 
-      {/* Movie credits style footer */}
+      {/* Movie credits footer */}
       <motion.div
         className="border-t border-border/50 pt-8"
         initial={{ opacity: 0 }}
@@ -80,13 +84,20 @@ export const ContactSection = () => (
         viewport={{ once: true }}
         transition={{ delay: 0.6 }}
       >
-        <p className="text-xs text-muted-foreground tracking-[0.3em] uppercase mb-2">
-          Directed & Developed by
-        </p>
-        <p className="text-lg font-bold text-primary text-glow tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <HudDot />
+          <p className="text-xs text-muted-foreground tracking-[0.3em] uppercase font-mono">
+            Directed & Developed by
+          </p>
+          <HudDot />
+        </div>
+        <p
+          className="text-lg font-bold text-primary text-glow tracking-wider"
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
+        >
           Your Name
         </p>
-        <p className="text-xs text-muted-foreground mt-4">
+        <p className="text-xs text-muted-foreground mt-4 font-mono">
           © 2026 All rights reserved. Built with React & ❤️
         </p>
       </motion.div>
