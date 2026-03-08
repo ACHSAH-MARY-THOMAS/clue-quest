@@ -176,7 +176,9 @@ const FirePortalCanvas = ({ isHovered, size }: { isHovered: boolean; size: numbe
           } else {
             // Soft glow embers
             const eSize = s.size * (1 - progress * 0.4);
-            const eg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, eSize * 4);
+            const eRadius = eSize * 4;
+            if (!Number.isFinite(s.x) || !Number.isFinite(s.y) || !Number.isFinite(eRadius) || eRadius <= 0) return true;
+            const eg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, eRadius);
             eg.addColorStop(0, `hsla(${s.hue + 10}, 100%, 85%, ${alpha * 0.7})`);
             eg.addColorStop(0.3, `hsla(${s.hue}, 100%, 55%, ${alpha * 0.4})`);
             eg.addColorStop(1, `hsla(${s.hue - 10}, 90%, 30%, 0)`);
