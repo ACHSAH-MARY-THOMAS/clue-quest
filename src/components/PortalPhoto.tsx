@@ -28,7 +28,7 @@ const MandalaCanvas = ({ isHovered, size }: { isHovered: boolean; size: number }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sparks = useRef<Spark[]>([]);
   const animFrame = useRef(0);
-  const hoverProgress = useRef(0);
+  const hoverProgress = useRef(0.6);
   const time = useRef(0);
 
   const cx = size / 2;
