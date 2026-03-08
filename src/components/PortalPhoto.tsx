@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import achsahImg from "@/assets/achsah.png";
 
 const techIcons = [
   { label: "PY", color: "hsl(50, 100%, 55%)" },
