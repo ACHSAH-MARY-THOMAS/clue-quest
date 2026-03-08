@@ -1,19 +1,19 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Login from "./Login";
+import { Navbar } from "@/components/Navbar";
+import { HeroSection } from "@/components/sections/HeroSection";
+import { AboutSection } from "@/components/sections/AboutSection";
+import { ProjectsSection } from "@/components/sections/ProjectsSection";
+import { CertificatesSection } from "@/components/sections/CertificatesSection";
+import { ContactSection } from "@/components/sections/ContactSection";
 
-const Index = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // If already logged in, redirect to game
-    const teamData = sessionStorage.getItem("lockstep_team");
-    if (teamData) {
-      navigate("/game");
-    }
-  }, [navigate]);
-
-  return <Login />;
-};
+const Index = () => (
+  <div className="min-h-screen bg-background">
+    <Navbar />
+    <HeroSection />
+    <AboutSection />
+    <ProjectsSection />
+    <CertificatesSection />
+    <ContactSection />
+  </div>
+);
 
 export default Index;
