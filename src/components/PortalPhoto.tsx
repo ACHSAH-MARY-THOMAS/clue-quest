@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import achsahImg from "@/assets/achsah.png";
 
 const techIcons = [
   { label: "PY", color: "hsl(50, 100%, 55%)" },
@@ -376,7 +377,7 @@ export const PortalPhoto = () => {
         className="absolute rounded-full overflow-hidden bg-muted flex items-center justify-center z-[6]"
         style={{ inset: size * 0.17, border: "2px solid hsl(35, 100%, 55% / 0.25)" }}
       >
-        <span className="text-6xl text-muted-foreground select-none">👤</span>
+        <img src={achsahImg} alt="Achsah" className="w-full h-full object-cover" />
       </div>
 
       <motion.div
